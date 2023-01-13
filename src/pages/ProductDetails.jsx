@@ -5,22 +5,19 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../partials/Sidebar";
 import { useGeolocated } from "react-geolocated";
 import OrderAlert from "../components/product/modal/OrderAlert";
-
+import { usePosition } from "use-position";
 export default function ProductDetails() {
   const navigate = useNavigate();
+  const watch = true;
+  const { latitude, longitude } = usePosition(watch, {
+    enableHighAccuracy: true,
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [responseData, setResponseData] = useState();
   const [openModal, setModalOpen] = useState();
   const [orderMessage, setOrderMessage] = useState();
   const [showErrorIcon, setShowErrorIcon] = useState(false);
   const { id } = useParams();
-  const { coords, isGeolocationAvailable, isGeolocationEnabled } =
-    useGeolocated({
-      positionOptions: {
-        enableHighAccuracy: false,
-      },
-      userDecisionTimeout: 5000,
-    });
 
   function toRadians(degrees) {
     var pi = Math.PI;
@@ -29,7 +26,6 @@ export default function ProductDetails() {
 
   //This function calculate the distance between the user location
   function orderDistance(origin, destination) {
-    console.log(origin, destination);
     let lat1 = origin[0];
     let lon1 = origin[1];
     let lat2 = destination[0];
@@ -50,7 +46,7 @@ export default function ProductDetails() {
 
     return d;
   }
-
+  console.log(latitude, longitude);
   //fetch the products from a dummy json located in the public folder
   const getData = () => {
     fetch("/data.json", {
@@ -60,12 +56,10 @@ export default function ProductDetails() {
       },
     })
       .then(function (response) {
-        console.log(response);
         return response.json();
       })
       .then(function (myJson) {
         setResponseData(myJson);
-        console.log(myJson, "popo");
       });
   };
   useEffect(() => {
@@ -84,8 +78,7 @@ export default function ProductDetails() {
   };
 
   const distanceResult =
-    orderDistance([6.4253, 3.4095], [coords?.latitude, coords?.longitude]) *
-    1000;
+    orderDistance([6.4253, 3.4095], [latitude, longitude]) * 1000;
   //order function
   const orderProduct = () => {
     if (distanceResult < 50000) {
